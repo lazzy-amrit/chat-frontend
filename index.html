@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Chat</title>
+</head>
+<body>
+    <h1>Chat Room</h1>
+    <input id="username" placeholder="Your name" value="Anonymous">
+    <input id="message" placeholder="Type a message">
+    <button onclick="sendMessage()">Send</button>
+    <div id="chat"></div>
+    
+    <script>
+        // Connect to the server using your IP
+        const ws = new WebSocket('ws://courtesy-oxygen-migration-answers.trycloudflare.com');
+        const chatDiv = document.getElementById('chat');
+        
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type === 'chat') {
+                chatDiv.innerHTML += `<p><strong>${data.username}:</strong> ${data.message}</p>`;
+            } else if (data.type === 'system') {
+                chatDiv.innerHTML += `<p><em>${data.message}</em></p>`;
+            } else if (data.type === 'error') {
+                chatDiv.innerHTML += `<p style="color:red;">${data.message}</p>`;
+            }
+        };
+        
+        function sendMessage() {
+            const username = document.getElementById('username').value;
+            const message = document.getElementById('message').value;
+            if (message) {
+                ws.send(JSON.stringify({username, message}));
+                document.getElementById('message').value = '';
+            }
+        }
+    </script>
+</body>
+</html>
