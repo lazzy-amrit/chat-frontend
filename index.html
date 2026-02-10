@@ -1,39 +1,147 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>WebSocket Chat</title>
+<meta charset="UTF-8">
+<title>WebSocket Chat</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #0f1220;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+
+  .chat-box {
+    width: 350px;
+    background: #181c2f;
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.4);
+  }
+
+  h2 {
+    text-align: center;
+    margin: 0 0 10px;
+  }
+
+  #chat {
+    height: 220px;
+    overflow-y: auto;
+    background: #0f1220;
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-size: 14px;
+  }
+
+  .msg {
+    margin-bottom: 6px;
+  }
+
+  .user {
+    color: #6cf;
+    font-weight: bold;
+  }
+
+  input, button {
+    width: 100%;
+    padding: 8px;
+    margin-top: 6px;
+    border-radius: 6px;
+    border: none;
+    outline: none;
+  }
+
+  input {
+    background: #22264a;
+    color: #fff;
+  }
+
+  button {
+    background: #4f7cff;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  button:disabled {
+    background: #555;
+  }
+
+  .status {
+    text-align: center;
+    font-size: 12px;
+    margin-bottom: 6px;
+    color: #aaa;
+  }
+</style>
 </head>
 <body>
-    <h1>Chat Room</h1>
-    <input id="username" placeholder="Your name" value="Anonymous">
-    <input id="message" placeholder="Type a message">
-    <button onclick="sendMessage()">Send</button>
-    <div id="chat"></div>
-    
-    <script>
-        // Connect to the server using your IP
-        const ws = new WebSocket('wss://courtesy-oxygen-migration-answers.trycloudflare.com');
-        const chatDiv = document.getElementById('chat');
-        
-        ws.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            if (data.type === 'chat') {
-                chatDiv.innerHTML += `<p><strong>${data.username}:</strong> ${data.message}</p>`;
-            } else if (data.type === 'system') {
-                chatDiv.innerHTML += `<p><em>${data.message}</em></p>`;
-            } else if (data.type === 'error') {
-                chatDiv.innerHTML += `<p style="color:red;">${data.message}</p>`;
-            }
-        };
-        
-        function sendMessage() {
-            const username = document.getElementById('username').value;
-            const message = document.getElementById('message').value;
-            if (message) {
-                ws.send(JSON.stringify({username, message}));
-                document.getElementById('message').value = '';
-            }
-        }
-    </script>
+
+<div class="chat-box">
+  <h2>Chat Room</h2>
+  <div class="status" id="status">Connecting…</div>
+
+  <div id="chat"></div>
+
+  <input id="username" placeholder="Your name" value="Anonymous">
+  <input id="message" placeholder="Type a message">
+  <button id="sendBtn" onclick="sendMessage()" disabled>Send</button>
+</div>
+
+<script>
+  // 🔥 PUT YOUR LATEST CLOUDFLARE URL HERE
+  const ws = new WebSocket(
+    "wss://courtesy-oxygen-migration-answers.trycloudflare.com"
+  );
+
+  const chat = document.getElementById("chat");
+  const status = document.getElementById("status");
+  const sendBtn = document.getElementById("sendBtn");
+
+  ws.onopen = () => {
+    status.textContent = "Connected";
+    sendBtn.disabled = false;
+  };
+
+  ws.onclose = () => {
+    status.textContent = "Disconnected";
+    sendBtn.disabled = true;
+  };
+
+  ws.onerror = () => {
+    status.textContent = "Connection error";
+  };
+
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    chat.innerHTML += `
+      <div class="msg">
+        <span class="user">${data.username}:</span>
+        ${data.message}
+      </div>
+    `;
+    chat.scrollTop = chat.scrollHeight;
+  };
+
+  function sendMessage() {
+    if (ws.readyState !== WebSocket.OPEN) return;
+
+    const username = document.getElementById("username").value;
+    const messageInput = document.getElementById("message");
+    const message = messageInput.value.trim();
+
+    if (!message) return;
+
+    ws.send(JSON.stringify({ username, message }));
+    messageInput.value = "";
+  }
+</script>
+
 </body>
 </html>
+
